@@ -5,9 +5,10 @@
 
 
 #Features
+
 -Login/Sign Up
     -Sign In /Sign up Form
-     -redirecr to Broswe Page
+     -redirect to Browse Page
 -Browse (after authentication)
     -Header
     -Main Movie
