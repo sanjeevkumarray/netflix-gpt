@@ -1,29 +1,144 @@
-import React, { useState } from 'react'
-import Header from './Header'
+import React, { useState, useRef } from "react";
+import Header from "./Header";
+import { checkValidData } from "../utils/validate";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../utils/firebase";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { addUser } from "../utils/userSclice";
 const Login = () => {
-  const[isSignInForm,setIsSignInForm]=useState(true);
+  const [isSignInForm, setIsSignInForm] = useState(true);
+  const [errorMessage, seterrorMessage] = useState(null);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const name = useRef(null);
+  const email = useRef(null);
+  const password = useRef(null);
 
-  const toggleSignInForm=()=>{
-      setIsSignInForm(!isSignInForm);
+  const handleButtonclik = () => {
+    //Validate the form data
+    console.log(name.current.value);
+    console.log(email.current.value);
+    console.log(password.current.value);
+
+    const message = -checkValidData(
+      email.current.value,
+      password.current.value
+    );
+    seterrorMessage(message);
+    if (message) return;
+
+    if (!isSignInForm) {
+      //Sign Up Logic
+      createUserWithEmailAndPassword(
+        auth,
+        email.current.value,
+        password.current.value
+      )
+        .then((userCredential) => {
+          const user = userCredential.user;
+          updateProfile(user, {
+            displayName: name.current.value,
+            photoURL:
+              "data:image/jpeg;base64,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",
+          })
+            .then(() => {
+              const { uid, email, displayName, photoURL } = auth.currentUser;
+              dispatch(
+                addUser({
+                  uid: uid,
+                  email: email,
+                  displayName: displayName,
+                  photoURL: photoURL,
+                })
+              );
+              navigate("/browse");
+            })
+            .catch((error) => {
+              seterrorMessage(error, message);
+            });
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          seterrorMessage(errorCode + "-" + errorMessage);
+        });
+    } else {
+      //Sign In Logic
+      signInWithEmailAndPassword(
+        auth,
+        email.current.value,
+        password.current.value
+      )
+        .then((userCredential) => {
+          // Signed in
+          const user = userCredential.user;
+          console.log(user);
+          navigate("/browse");
+        })
+        .catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          seterrorMessage(errorCode + "-" + errorMessage);
+        });
+    }
+  };
+
+  const toggleSignInForm = () => {
+    setIsSignInForm(!isSignInForm);
   };
   return (
     <div>
       <Header />
       <div className="absolute">
-       <img src="data:image/jpeg;base64,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"
-     alt='logo'/>
-     </div>
-    <from className="w-3/12 absolute p-12 bg-black my-36 mx-auto right-0 left-0 text-white rounded-lg bg-opacity-80" >
-      <h1 className="font-bold text-3xl py-4">{isSignInForm ? "Sign In" :"Sign Up"}</h1>
-      {!isSignInForm &&(
-      <input type="text" placeholder="Full Name" className="py-4 my-4 w-full bg-gray-700"/>)}
-      <input type="text" placeholder="Email Address" className="p-4 my-4 w-full bg-gray-700"/>
-      <input type="password" placeholder="Password" className="py-4 my-4 w-full bg-gray-700"/>
-      <button className="p-4 my-6 bg-red-700 w-full rounded-lg">{isSignInForm ? "Sign In" :"Sign Up"}</button>
-      <p className="py-4 cursor-pointer" onClick={toggleSignInForm}>{isSignInForm ?"New to Netflix? Sign Up Now" :" Already register? Sign In Now..."} </p>
-    </from>
+        <img
+          src="https://assets.nflxext.com/ffe/siteui/vlv3/9134db96-10d6-4a64-a619-a21da22f8999/a449fabb-05e4-4c8a-b062-b0bec7d03085/IN-en-20240115-trifectadaily-perspective_alpha_website_large.jpg"
+          alt="logo"
+        />
+      </div>
+      <from
+        onSubmit={(e) => e.preventDefault()}
+        className="w-3/12 absolute p-12 bg-black my-36 mx-auto right-0 left-0 text-white rounded-lg bg-opacity-80"
+      >
+        <h1 className="font-bold text-3xl py-4">
+          {isSignInForm ? "Sign In" : "Sign Up"}
+        </h1>
+        {!isSignInForm && (
+          <input
+            ref={name}
+            type="text"
+            placeholder="Full Name"
+            className="py-4 my-4 w-full bg-gray-700"
+          />
+        )}
+        <input
+          ref={email}
+          type="text"
+          placeholder="Email Address"
+          className="p-4 my-4 w-full bg-gray-700"
+        />
+        <input
+          ref={password}
+          type="password"
+          placeholder="Password"
+          className="py-4 my-4 w-full bg-gray-700"
+        />
+        <p className="text-red-500 text-lg py-2">{errorMessage}</p>
+        <button
+          className="p-4 my-6 bg-red-700 w-full rounded-lg"
+          onClick={handleButtonclik}
+        >
+          {isSignInForm ? "Sign In" : "Sign Up"}
+        </button>
+        <p className="py-4 cursor-pointer" onClick={toggleSignInForm}>
+          {isSignInForm
+            ? "New to Netflix? Sign Up Now"
+            : " Already register? Sign In Now..."}{" "}
+        </p>
+      </from>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;
